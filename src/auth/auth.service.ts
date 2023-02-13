@@ -68,6 +68,7 @@ export class AuthService {
     if (userValidated) {
       return {
         username: userValidated.username,
+        role: userValidated.role,
         access_token: this.jwtService.sign(payload),
       };
     }

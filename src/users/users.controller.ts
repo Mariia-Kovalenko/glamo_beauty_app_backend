@@ -2,11 +2,14 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Request,
   UseGuards,
   UsePipes,
   ValidationPipe,
   Body,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UsersService } from 'src/users/users.service';
@@ -16,6 +19,7 @@ import { RolesGuard } from 'src/guards/roles.guard';
 import { Role } from './user.model';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AddressDto } from './dtos/Address.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -26,6 +30,24 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { METADATA_AUTHORIZED_KEY } from 'src/config';
+import { diskStorage } from 'multer';
+import path = require('path');
+import { v4 as uuid } from 'uuid';
+import { Param, Res } from '@nestjs/common/decorators';
+import { join } from 'path';
+
+export const storage = {
+  storage: diskStorage({
+    destination: './uploads/profileImages',
+    filename: (req, file, cb) => {
+      const filename: string =
+        path.parse(file.originalname).name.replace(/\s/g, '') + uuid();
+      const extension: string = path.parse(file.originalname).ext;
+
+      cb(null, `${filename}${extension}`);
+    },
+  }),
+};
 
 @ApiTags('users')
 @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
@@ -102,5 +124,22 @@ export class UsersController {
       userAddress.location,
     );
     return res;
+  }
+
+  @Post('upload')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', storage))
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return await this.userService.setUserProfileImage(
+      req.user.userId,
+      file.filename,
+    );
+  }
+
+  @Get('profile-image/:imageName')
+  async getProfileImage(@Param('imageName') imageName: string, @Res() res) {
+    return res.sendFile(
+      join(process.cwd(), 'uploads/profileImages/' + imageName),
+    );
   }
 }

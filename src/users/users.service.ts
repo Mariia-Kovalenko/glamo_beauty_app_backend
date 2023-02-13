@@ -47,6 +47,7 @@ export class UsersService {
       username: userFound.username,
       email: userFound.email,
       role: userFound.role,
+      profileImage: userFound.profileImage,
     };
   }
 
@@ -71,7 +72,10 @@ export class UsersService {
   async fetchMasters() {
     let masters;
     try {
-      masters = await this.userModel.find({ role: Role.MASTER });
+      masters = await this.userModel.find({
+        role: Role.MASTER,
+        location: { $exists: true },
+      });
       if (!masters) {
         throw new HttpException('Not found', HttpStatus.NOT_FOUND);
       }
@@ -106,10 +110,26 @@ export class UsersService {
     location?: { lat: string; lng: string },
   ) {
     try {
+      return await this.userModel.findByIdAndUpdate(
+        userId,
+        {
+          address,
+          location,
+        },
+        { new: true },
+      );
+    } catch (error) {
+      throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async setUserProfileImage(userId: string, profileImage: string) {
+    try {
       const userUpdated = await this.userModel.findByIdAndUpdate(userId, {
-        address,
-        location,
+        profileImage,
       });
+      console.log(userUpdated);
+
       return userUpdated;
     } catch (error) {
       throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);

@@ -19,6 +19,7 @@ export const UserSchema = new mongoose.Schema({
     lat: { type: String },
     lng: { type: String },
   },
+  profileImage: { type: String },
 });
 
 export interface User {
@@ -27,4 +28,5 @@ export interface User {
   email: string;
   password: string;
   role: Role;
+  profileImage?: string;
 }
