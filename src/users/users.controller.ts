@@ -30,24 +30,9 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { METADATA_AUTHORIZED_KEY } from 'src/config';
-import { diskStorage } from 'multer';
-import path = require('path');
-import { v4 as uuid } from 'uuid';
 import { Param, Res } from '@nestjs/common/decorators';
 import { join } from 'path';
-
-export const storage = {
-  storage: diskStorage({
-    destination: './uploads/profileImages',
-    filename: (req, file, cb) => {
-      const filename: string =
-        path.parse(file.originalname).name.replace(/\s/g, '') + uuid();
-      const extension: string = path.parse(file.originalname).ext;
-
-      cb(null, `${filename}${extension}`);
-    },
-  }),
-};
+import { storage } from './helpers/uploads-storage';
 
 @ApiTags('users')
 @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
@@ -130,6 +115,12 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', storage))
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    if (!file?.filename) {
+      throw new HttpException(
+        'File must be a png, jpg/jpeg',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     return await this.userService.setUserProfileImage(
       req.user.userId,
       file.filename,
