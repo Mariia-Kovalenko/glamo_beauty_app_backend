@@ -84,10 +84,20 @@ export class UsersController {
     return await this.userService.fetchMasters();
   }
 
-  @Get('masters/near')
+  @Get('masters/:id')
+  @UseGuards(JwtAuthGuard)
+  async getMasterById(@Param('id') id: string) {
+    return await this.userService.getUserById(id);
+  }
+
+  @Post('masters/near')
   async getMastersNearMe(@Request() req) {
     const { lat, lng, radius } = req.body;
-    return await this.userService.fetchMastersByLocation();
+    return await this.userService.fetchMastersByLocation(
+      Number(lat),
+      Number(lng),
+      Number(radius),
+    );
   }
 
   @Patch('address')

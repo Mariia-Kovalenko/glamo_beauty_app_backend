@@ -5,6 +5,15 @@ export enum Role {
   MASTER = 'MASTER',
 }
 
+export enum ServiceTypes {
+  MAKEUP = '1',
+  HAIR = '2',
+  NAILS = '3',
+  BROWS = '4',
+  COSMETOLOGY = '5',
+  MASSAGE = '6',
+}
+
 export const UserSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true },
@@ -16,8 +25,16 @@ export const UserSchema = new mongoose.Schema({
   },
   address: { type: String, required: false },
   location: {
-    lat: { type: String },
-    lng: { type: String },
+    type: {
+      type: String, // Don't do `{ location: { type: String } }`
+      enum: ['Point'], // 'location.type' must be 'Point'
+      required: true,
+      default: 'Point',
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
   },
   profileImage: { type: String },
 });
@@ -28,5 +45,8 @@ export interface User {
   email: string;
   password: string;
   role: Role;
+  location: {
+    coordinates: number[];
+  };
   profileImage?: string;
 }

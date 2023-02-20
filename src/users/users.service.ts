@@ -7,26 +7,6 @@ import { User, Role } from 'src/users/user.model';
 export class UsersService {
   constructor(@InjectModel('User') private readonly userModel: Model<User>) {}
 
-  isInRadius(
-    currLat: number,
-    currLng: number,
-    destinLat: number,
-    destinLng: number,
-    r: number,
-  ) {
-    const earthRad = 6371;
-    return (
-      Math.acos(
-        Math.sin(currLat) * Math.sin(destinLat) +
-          Math.cos(currLat) *
-            Math.cos(destinLat) *
-            Math.cos(destinLng - currLng),
-      ) *
-        earthRad <=
-      r
-    );
-  }
-
   async fetchUsers() {
     const users = await this.userModel.find().exec();
     return users;
@@ -47,6 +27,7 @@ export class UsersService {
       username: userFound.username,
       email: userFound.email,
       role: userFound.role,
+      address: userFound.address,
       profileImage: userFound.profileImage,
     };
   }
@@ -85,22 +66,23 @@ export class UsersService {
     }
   }
 
-  async fetchMastersByLocation() {
-    let masters;
-    const earthRad = 6371;
-    try {
-      masters = await this.userModel.find({
-        $where: function () {
-          console.log(this);
-          return this.role === 'MASTER';
+  async fetchMastersByLocation(lat: number, lng: number, radius: number) {
+    const kmToRadian = function (miles: number) {
+      const earthRadiusInKm = 6378;
+      return miles / earthRadiusInKm;
+    };
+    const query = {
+      location: {
+        $geoWithin: {
+          $centerSphere: [[lng, lat], kmToRadian(radius)],
         },
-      });
-      console.log('masters', masters);
-      return {};
+      },
+    };
+    try {
+      const res = await this.userModel.find(query);
+      return res;
     } catch (error) {
-      console.log(error);
-
-      throw new HttpException('Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
   }
 
@@ -110,11 +92,15 @@ export class UsersService {
     location?: { lat: string; lng: string },
   ) {
     try {
+      const coordinates = {
+        type: 'Point',
+        coordinates: [location.lng, location.lat],
+      };
       return await this.userModel.findByIdAndUpdate(
         userId,
         {
           address,
-          location,
+          location: coordinates,
         },
         { new: true },
       );
