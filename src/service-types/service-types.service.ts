@@ -24,6 +24,14 @@ export class ServiceTypesService {
     return await newService.save();
   }
 
+  async getServices() {
+    try {
+      return await this.serviceModel.find();
+    } catch (error) {
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    }
+  }
+
   async findService(typeId: string) {
     let serviceFound;
     try {

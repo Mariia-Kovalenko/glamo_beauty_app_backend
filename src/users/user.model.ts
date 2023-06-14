@@ -14,6 +14,20 @@ export enum ServiceTypes {
   MASSAGE = '6',
 }
 
+const ServicesSubSchema = new mongoose.Schema({
+  value: {
+    type: String,
+    enum: [
+      ServiceTypes.MAKEUP,
+      ServiceTypes.BROWS,
+      ServiceTypes.COSMETOLOGY,
+      ServiceTypes.HAIR,
+      ServiceTypes.MASSAGE,
+      ServiceTypes.NAILS,
+    ],
+  },
+});
+
 export const UserSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true },
@@ -37,6 +51,7 @@ export const UserSchema = new mongoose.Schema({
     },
   },
   profileImage: { type: String },
+  services: [{ type: String, refs: ServicesSubSchema }],
 });
 
 export interface User {

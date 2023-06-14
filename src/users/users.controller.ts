@@ -92,11 +92,12 @@ export class UsersController {
 
   @Post('masters/near')
   async getMastersNearMe(@Request() req) {
-    const { lat, lng, radius } = req.body;
+    const { lat, lng, radius, serviceTypes } = req.body;
     return await this.userService.fetchMastersByLocation(
       Number(lat),
       Number(lng),
       Number(radius),
+      serviceTypes,
     );
   }
 
@@ -113,12 +114,21 @@ export class UsersController {
     description: 'Server Error',
   })
   async setAddress(@Body() userAddress: AddressDto, @Request() req) {
-    const res = await this.userService.setUserAddress(
+    return await this.userService.setUserAddress(
       req.user.userId,
       userAddress.address,
       userAddress.location,
     );
-    return res;
+  }
+
+  @Post('set-service')
+  @Roles(Role.MASTER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async addMasterServices(@Request() req) {
+    return await this.userService.addUserServiceTypes(
+      req.user.userId,
+      req.body.typeId,
+    );
   }
 
   @Post('upload')

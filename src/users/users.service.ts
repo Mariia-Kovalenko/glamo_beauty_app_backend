@@ -1,11 +1,15 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ServiceTypesService } from 'src/service-types/service-types.service';
 import { User, Role } from 'src/users/user.model';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel('User') private readonly userModel: Model<User>) {}
+  constructor(
+    private serviceTypesService: ServiceTypesService,
+    @InjectModel('User') private readonly userModel: Model<User>,
+  ) {}
 
   async fetchUsers() {
     const users = await this.userModel.find().exec();
@@ -66,12 +70,20 @@ export class UsersService {
     }
   }
 
-  async fetchMastersByLocation(lat: number, lng: number, radius: number) {
+  async fetchMastersByLocation(
+    lat: number,
+    lng: number,
+    radius: number,
+    serviceTypes: string[],
+  ) {
     const kmToRadian = function (miles: number) {
       const earthRadiusInKm = 6378;
       return miles / earthRadiusInKm;
     };
     const query = {
+      services: {
+        $in: serviceTypes,
+      },
       location: {
         $geoWithin: {
           $centerSphere: [[lng, lat], kmToRadian(radius)],
@@ -117,6 +129,34 @@ export class UsersService {
       console.log(userUpdated);
 
       return userUpdated;
+    } catch (error) {
+      throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async addUserServiceTypes(userId: string, typeId: string) {
+    try {
+      // check if there is a service with such typeId
+      const serviceTypeExists = await this.serviceTypesService.findService(
+        typeId,
+      );
+
+      if (!serviceTypeExists) {
+        throw new Error('Service type not found');
+      }
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
+    try {
+      return await this.userModel.findByIdAndUpdate(
+        userId,
+        {
+          $push: {
+            services: typeId,
+          },
+        },
+        { new: true },
+      );
     } catch (error) {
       throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }

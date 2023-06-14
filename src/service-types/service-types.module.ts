@@ -10,6 +10,6 @@ import { ServiceSchema } from './service.model';
   ],
   controllers: [ServiceTypesController],
   providers: [ServiceTypesService],
-  exports: [ServiceTypesModule],
+  exports: [ServiceTypesModule, ServiceTypesService],
 })
 export class ServiceTypesModule {}

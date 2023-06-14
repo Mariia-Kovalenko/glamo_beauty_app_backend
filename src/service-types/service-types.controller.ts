@@ -16,6 +16,11 @@ import { ServiceTypesService } from './service-types.service';
 export class ServiceTypesController {
   constructor(private serviceTypeService: ServiceTypesService) {}
 
+  @Get()
+  async getAllServices() {
+    return await this.serviceTypeService.getServices();
+  }
+
   @Get(':typeId')
   async getServiceTypes(@Param('typeId') typeId: string) {
     return await this.serviceTypeService.findService(typeId);

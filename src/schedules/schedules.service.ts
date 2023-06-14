@@ -15,7 +15,8 @@ export class SchedulesService {
       const scheduleFound = await this.scheduleModel.findOne({ userId });
 
       if (!scheduleFound) {
-        throw new HttpException('No schedule found', HttpStatus.NOT_FOUND);
+        // return { message: 'No schedule set' };
+        throw HttpStatus.NO_CONTENT;
       }
 
       return scheduleFound;
