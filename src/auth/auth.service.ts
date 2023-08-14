@@ -5,6 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { Role, User } from 'src/users/user.model';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import * as jwt from 'jsonwebtoken';
+import { BASE_URL, RESET_PASSWORD } from 'src/config';
 
 @Injectable()
 export class AuthService {
@@ -74,5 +76,75 @@ export class AuthService {
         access_token: this.jwtService.sign(payload),
       };
     }
+  }
+
+  async resetPassword(email: string) {
+    const foundUser = await this.userModel.findOne({ email: email });
+
+    if (!foundUser) {
+      throw new HttpException('User Not found', HttpStatus.NOT_FOUND);
+    }
+
+    // create temporary secret to be sent to email
+    const secret = process.env.ACCESS_TOKEN_SECRET + foundUser.password;
+
+    // create new token
+    const token = jwt.sign(
+      {
+        _id: foundUser._id,
+        role: foundUser.role,
+      },
+      secret,
+      { expiresIn: '10m' },
+    );
+    return `${BASE_URL}${RESET_PASSWORD}${foundUser._id}/${token}`;
+  }
+
+  async setNewPassword(id, password, token) {
+    const foundUser = await this.userModel.findById(id);
+
+    if (!foundUser) {
+      throw new HttpException('User Not found', HttpStatus.NOT_FOUND);
+    }
+
+    // generate secret and verify token
+    const secret = process.env.ACCESS_TOKEN_SECRET + foundUser.password;
+
+    try {
+      const verified = jwt.verify(token, secret);
+      const hashedPass = await bcrypt.hash(password, 10);
+
+      const updatedUser = await this.userModel.findByIdAndUpdate(id, {
+        password: hashedPass,
+      });
+      if (!updatedUser) {
+        throw new HttpException(
+          'Server error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    } catch (error) {
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  async verifyUser(id: string, token: string) {
+    const foundUser = await this.userModel.findById(id);
+
+    if (!foundUser) {
+      throw new HttpException('User Not found', HttpStatus.NOT_FOUND);
+    }
+
+    // generate secret and verify token
+    const secret = process.env.ACCESS_TOKEN_SECRET + foundUser.password;
+    const verified = jwt.verify(token, secret);
+
+    if (!verified) {
+      throw new HttpException('Access denied', HttpStatus.FORBIDDEN);
+    }
+
+    return {
+      email: foundUser.email,
+    };
   }
 }
