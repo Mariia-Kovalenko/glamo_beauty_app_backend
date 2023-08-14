@@ -61,7 +61,6 @@ export class AuthController {
     @Res() res,
   ) {
     const { email } = forgotPasswordData;
-    console.log(email);
     try {
       const link = await this.authService.resetPassword(email);
 
@@ -104,7 +103,6 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      console.log(token)
       const userVerified = await this.authService.verifyUser(id, token);
       return res.render('reset_password', {
         email: userVerified.email,
