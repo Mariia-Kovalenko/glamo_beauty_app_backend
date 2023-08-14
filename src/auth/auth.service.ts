@@ -58,6 +58,7 @@ export class AuthService {
     const payload = {
       email: email,
       role: userValidated.role,
+      profileImage: userValidated.profileImage,
       sub: userValidated.id,
     };
 
@@ -69,6 +70,7 @@ export class AuthService {
       return {
         username: userValidated.username,
         role: userValidated.role,
+        profileImage: userValidated.profileImage,
         access_token: this.jwtService.sign(payload),
       };
     }

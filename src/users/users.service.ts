@@ -51,6 +51,7 @@ export class UsersService {
       role: userFound.role,
       id: String(userFound._id),
       password: userFound.password,
+      profileImage: userFound.profileImage,
     };
   }
 
