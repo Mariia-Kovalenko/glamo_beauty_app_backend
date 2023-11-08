@@ -38,6 +38,7 @@ export const UserSchema = new mongoose.Schema({
     required: true,
   },
   address: { type: String, required: false },
+  phone: { type: String, required: false },
   location: {
     type: {
       type: String, // Don't do `{ location: { type: String } }`

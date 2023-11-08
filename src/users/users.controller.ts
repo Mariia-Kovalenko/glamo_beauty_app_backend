@@ -86,11 +86,18 @@ export class UsersController {
 
   @Get('masters/:id')
   @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({
+    description: 'User found',
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
   async getMasterById(@Param('id') id: string) {
     return await this.userService.getUserById(id);
   }
 
   @Post('masters/near')
+  @ApiOkResponse({
+    description: 'Users found',
+  })
   async getMastersNearMe(@Request() req) {
     const { lat, lng, radius, serviceTypes } = req.body;
     return await this.userService.fetchMastersByLocation(
@@ -101,35 +108,16 @@ export class UsersController {
     );
   }
 
-  @Patch('address')
-  @UseGuards(JwtAuthGuard)
-  @UsePipes(new ValidationPipe())
-  @ApiOkResponse({
-    description: 'Address successfully updated',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Unauthorized',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Server Error',
-  })
-  async setAddress(@Body() userAddress: AddressDto, @Request() req) {
-    return await this.userService.setUserAddress(
-      req.user.userId,
-      userAddress.address,
-      userAddress.location,
-    );
-  }
-
-  @Post('set-service')
+  @Patch('update-master')
   @Roles(Role.MASTER)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async addMasterServices(@Request() req) {
-    return await this.userService.addUserServiceTypes(
+  async updateMaster(@Request() req) {
+    return await this.userService.updateMaster(
       req.user.userId,
-      req.body.typeId,
-    );
+      req.body
+    )
   }
+
 
   @Post('upload')
   @UseGuards(JwtAuthGuard)
@@ -148,6 +136,9 @@ export class UsersController {
   }
 
   @Get('profile-image/:imageName')
+  @ApiOkResponse({
+    description: 'Image found',
+  })
   async getProfileImage(@Param('imageName') imageName: string, @Res() res) {
     return res.sendFile(
       join(process.cwd(), 'uploads/profileImages/' + imageName),

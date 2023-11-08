@@ -70,6 +70,7 @@ export class AuthService {
 
     if (userValidated) {
       return {
+        id: userValidated.id,
         username: userValidated.username,
         role: userValidated.role,
         profileImage: userValidated.profileImage,
