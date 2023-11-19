@@ -101,7 +101,7 @@ export class UsersService {
         }
     }
 
-    async updateMaster(
+    async updateUser(
         userId: string,
         body: {
             username: string;

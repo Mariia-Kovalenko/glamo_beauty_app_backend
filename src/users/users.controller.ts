@@ -33,6 +33,8 @@ import { METADATA_AUTHORIZED_KEY } from 'src/config';
 import { Param, Res } from '@nestjs/common/decorators';
 import { join } from 'path';
 import { storage } from './helpers/uploads-storage';
+import { UpdateUserDto } from './dtos/UpdateUserDto.dto';
+import * as fs from 'fs';
 
 @ApiTags('users')
 @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
@@ -98,6 +100,9 @@ export class UsersController {
   @ApiOkResponse({
     description: 'Users found',
   })
+  @ApiForbiddenResponse({
+    description: 'Forbidden',
+  })
   async getMastersNearMe(@Request() req) {
     const { lat, lng, radius, serviceTypes } = req.body;
     return await this.userService.fetchMastersByLocation(
@@ -108,13 +113,15 @@ export class UsersController {
     );
   }
 
-  @Patch('update-master')
-  @Roles(Role.MASTER)
+  @Patch('update')
+  @ApiForbiddenResponse({
+    description: 'Forbidden',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async updateMaster(@Request() req) {
-    return await this.userService.updateMaster(
+  async updateMaster(@Request() req, @Body() userData: UpdateUserDto) {
+    return await this.userService.updateUser(
       req.user.userId,
-      req.body
+      userData
     )
   }
 
@@ -129,6 +136,13 @@ export class UsersController {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    // delete previous photo from storage
+    const user = await this.userService.getUserById(req.user.userId);
+    if (user.profileImage) {
+      fs.unlinkSync(`./uploads/profileImages/${user.profileImage}`);
+    }
+    
     return await this.userService.setUserProfileImage(
       req.user.userId,
       file.filename,
