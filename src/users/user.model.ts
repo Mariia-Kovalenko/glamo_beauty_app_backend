@@ -53,6 +53,7 @@ export const UserSchema = new mongoose.Schema({
   },
   profileImage: { type: String },
   services: [{ type: String, refs: ServicesSubSchema }],
+  gallery: [{type: String}]
 });
 
 export interface User {
@@ -65,4 +66,6 @@ export interface User {
     coordinates: number[];
   };
   profileImage?: string;
+  services?: string[],
+  gallery?: string[]
 }

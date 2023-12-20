@@ -139,9 +139,44 @@ export class UsersService {
             const userUpdated = await this.userModel.findByIdAndUpdate(userId, {
                 profileImage,
             });
-            console.log(userUpdated);
 
             return userUpdated;
+        } catch (error) {
+            throw new HttpException(
+                "Server error",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async addUserGalleryPhoto(userId: string, image: string) {
+        try {
+            const userUpdated = await this.userModel.findByIdAndUpdate(
+                userId,
+                {
+                    $push: { gallery: image}
+                },
+                { new: true })
+
+                return userUpdated;
+        } catch (error) {
+            throw new HttpException(
+                "Server error",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    async deleteUserGalleryPhoto(userId: string, image: string) {
+        try {
+            const userUpdated = await this.userModel.findByIdAndUpdate(
+                userId,
+                {
+                    $pull: { gallery: image}
+                },
+                { new: true })
+
+                return userUpdated;
         } catch (error) {
             throw new HttpException(
                 "Server error",

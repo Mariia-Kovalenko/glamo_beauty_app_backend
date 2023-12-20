@@ -12,9 +12,10 @@ const validMimeTypes: validMimeType[] = [
   'image/jpeg',
 ];
 
-export const storage = {
+
+export const createStorage = (destination: string) => ({
   storage: diskStorage({
-    destination: './uploads/profileImages',
+    destination,
     filename: (req, file, cb) => {
       const filename: string =
         path.parse(file.originalname).name.replace(/\s/g, '') + uuid();
@@ -27,4 +28,39 @@ export const storage = {
     const allowedMimeTypes: validMimeType[] = validMimeTypes;
     allowedMimeTypes.includes(file.mimetype) ? cb(null, true) : cb(null, false);
   },
-};
+});
+
+
+// export const storage = {
+//   storage: diskStorage({
+//     destination: './uploads/profileImages',
+//     filename: (req, file, cb) => {
+//       const filename: string =
+//         path.parse(file.originalname).name.replace(/\s/g, '') + uuid();
+//       const extension: string = path.parse(file.originalname).ext;
+
+//       cb(null, `${filename}${extension}`);
+//     },
+//   }),
+//   fileFilter: (req, file, cb) => {
+//     const allowedMimeTypes: validMimeType[] = validMimeTypes;
+//     allowedMimeTypes.includes(file.mimetype) ? cb(null, true) : cb(null, false);
+//   },
+// };
+
+// export const galleryStorage = {
+//   storage: diskStorage({
+//     destination: './uploads/gallery',
+//     filename: (req, file, cb) => {
+//       const filename: string =
+//         path.parse(file.originalname).name.replace(/\s/g, '') + uuid();
+//       const extension: string = path.parse(file.originalname).ext;
+
+//       cb(null, `${filename}${extension}`);
+//     },
+//   }),
+//   fileFilter: (req, file, cb) => {
+//     const allowedMimeTypes: validMimeType[] = validMimeTypes;
+//     allowedMimeTypes.includes(file.mimetype) ? cb(null, true) : cb(null, false);
+//   },
+// }

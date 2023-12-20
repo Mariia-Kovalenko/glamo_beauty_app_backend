@@ -11,7 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ServiceDto } from './dtos/ServiceDto';
 import { ServiceTypesService } from './service-types.service';
 
-@ApiTags('service types')
+// @ApiTags('service types')
 @Controller('service-types')
 export class ServiceTypesController {
   constructor(private serviceTypeService: ServiceTypesService) {}
