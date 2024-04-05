@@ -34,7 +34,8 @@ export class UsersService {
             role: userFound.role,
             address: userFound.address,
             profileImage: userFound.profileImage,
-            services: userFound.services
+            services: userFound.services,
+            gallery: userFound.gallery
         };
     }
 
@@ -146,6 +147,21 @@ export class UsersService {
                 "Server error",
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    async getUserGallery(id: string) {
+        let userFound;
+        try {
+            userFound = await this.userModel.findById(id);
+        } catch (error) {
+            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+        }
+        if (!userFound) {
+            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+        }
+        return {
+            gallery: userFound.gallery
         }
     }
 

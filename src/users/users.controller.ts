@@ -177,6 +177,11 @@ export class UsersController {
         return res.sendFile(filePath);
     }
 
+    @Get('gallery/:id')
+    async getUserGallery(@Param() user) {
+        return await this.userService.getUserGallery(user.id);
+    }
+
     @Post("upload-gallery")
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(
