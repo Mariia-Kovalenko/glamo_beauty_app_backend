@@ -4,13 +4,16 @@ import { AppModule } from './app.module';
 import { METADATA_AUTHORIZED_KEY } from './config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config(); // Load environment variables from .env file
 
 async function bootstrap() {
-  // const app = await NestFactory.create(AppModule);
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('ejs');
   app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle('Glamo Application API')
     .setDescription('The glamo API description')
@@ -22,6 +25,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
   await app.listen(8080);
 }
 bootstrap();

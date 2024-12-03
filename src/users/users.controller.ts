@@ -39,6 +39,8 @@ import { join } from "path";
 import { createStorage } from "./helpers/uploads-storage";
 import { UpdateUserDto } from "./dtos/UpdateUserDto.dto";
 import * as fs from "fs";
+import { FirebaseAdminService } from "src/firebase/firebase-admin.service";
+import * as multer from "multer";
 
 @ApiTags("users")
 @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
@@ -129,35 +131,82 @@ export class UsersController {
     @Post("upload")
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(
-        FileInterceptor(
-            "file",
-            createStorage(`./${UPLOADS_PATH}${PROFILE_IMG_PATH}`)
-        )
+        FileInterceptor("file", {
+            limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB size limit
+            fileFilter: (req, file, cb) => {
+                const allowedMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
+                allowedMimeTypes.includes(file.mimetype)
+                    ? cb(null, true)
+                    : cb(new Error("Invalid file type. Only PNG, JPG, and JPEG are allowed."), false);
+            },
+            storage: multer.memoryStorage(), // Store files in memory
+        })
     )
     async uploadFile(
         @UploadedFile() file: Express.Multer.File,
         @Request() req
     ) {
-        if (!file?.filename) {
+        if (!file) {
             throw new HttpException(
                 "File must be a png, jpg/jpeg",
                 HttpStatus.BAD_REQUEST
             );
         }
 
-        // delete previous photo from storage
-        const user = await this.userService.getUserById(req.user.userId);
-        if (user.profileImage) {
-            fs.unlinkSync(
-                `./${UPLOADS_PATH}/${PROFILE_IMG_PATH}/${user.profileImage}`
-            );
-        }
+        // Initialize Firebase Service
+        const firebaseService = new FirebaseAdminService();
 
+        // Get the current user's profile image URL
+        const user = await this.userService.getUserById(req.user.userId);
+
+        // Delete the previous profile image from Firebase Storage
+        // if (user.profileImage) {
+        //     const filePath = user.profileImage.split(`${user.projectId}.appspot.com/`)[1];
+        //     await firebaseService.deleteFile(filePath);
+        // }
+
+        // Upload the new image to Firebase
+        const publicUrl = await firebaseService.uploadFile(file);
+
+        // Update the user's profile image with the Firebase URL
         return await this.userService.setUserProfileImage(
             req.user.userId,
-            file.filename
+            publicUrl
         );
     }
+
+    // @Post("upload")
+    // @UseGuards(JwtAuthGuard)
+    // @UseInterceptors(
+    //     FileInterceptor(
+    //         "file",
+    //         createStorage(`./${UPLOADS_PATH}${PROFILE_IMG_PATH}`)
+    //     )
+    // )
+    // async uploadFile(
+    //     @UploadedFile() file: Express.Multer.File,
+    //     @Request() req
+    // ) {
+    //     if (!file?.filename) {
+    //         throw new HttpException(
+    //             "File must be a png, jpg/jpeg",
+    //             HttpStatus.BAD_REQUEST
+    //         );
+    //     }
+
+    //     // delete previous photo from storage
+    //     const user = await this.userService.getUserById(req.user.userId);
+    //     if (user.profileImage) {
+    //         fs.unlinkSync(
+    //             `./${UPLOADS_PATH}/${PROFILE_IMG_PATH}/${user.profileImage}`
+    //         );
+    //     }
+
+    //     return await this.userService.setUserProfileImage(
+    //         req.user.userId,
+    //         file.filename
+    //     );
+    // }
 
     @Get("profile-image/:imageName")
     @ApiOkResponse({
