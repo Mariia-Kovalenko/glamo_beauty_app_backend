@@ -7,26 +7,28 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { ServiceDto } from './dtos/ServiceDto';
 import { ServiceTypesService } from './service-types.service';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 
-// @ApiTags('service types')
 @Controller('service-types')
 export class ServiceTypesController {
   constructor(private serviceTypeService: ServiceTypesService) {}
 
   @Get()
+  @ApiExcludeEndpoint()
   async getAllServices() {
     return await this.serviceTypeService.getServices();
   }
 
   @Get(':typeId')
+  @ApiExcludeEndpoint()
   async getServiceTypes(@Param('typeId') typeId: string) {
     return await this.serviceTypeService.findService(typeId);
   }
 
   @Post()
+  @ApiExcludeEndpoint()
   @UsePipes(new ValidationPipe())
   async addService(@Body() serviceData: ServiceDto) {
     return await this.serviceTypeService.createService(

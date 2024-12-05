@@ -7,6 +7,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
 import { LoginUserDto } from 'src/users/dtos/LoginUserDto';
@@ -21,6 +22,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
+  @ApiOperation({ summary: "Register user with role" })
   @ApiCreatedResponse({
     description: 'The record has been successfully created.',
   })
@@ -42,6 +44,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiOperation({ summary: "Login user with email and password" })
   @ApiCreatedResponse({
     description: 'Login successful',
   })
@@ -56,6 +59,7 @@ export class AuthController {
   }
 
   @Post('forgot_password')
+  @ApiOperation({ summary: "Initiate password restoration with email" })
   async forgotPassword(
     @Body() forgotPasswordData: ForgotPasswordDto,
     @Res() res,
@@ -97,6 +101,7 @@ export class AuthController {
   }
 
   @Get('reset_password/:id/:token')
+  @ApiOperation({ summary: "Get reset password page with id and token received on email" })
   async resetPass(
     @Param('id') id: string,
     @Param('token') token: string,
@@ -117,6 +122,7 @@ export class AuthController {
   }
 
   @Post('reset_password/:id/:token')
+  @ApiOperation({ summary: "Reset password with id and token received on email" })
   async setNewPassword(
     @Param('id') id: string,
     @Param('token') token: string,

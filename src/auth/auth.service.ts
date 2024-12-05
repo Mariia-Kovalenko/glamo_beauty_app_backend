@@ -6,7 +6,7 @@ import { Role, User } from 'src/users/user.model';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as jwt from 'jsonwebtoken';
-import { BASE_URL, RESET_PASSWORD } from 'src/config';
+import { BASE_URL, HOSTED_URL, RESET_PASSWORD } from 'src/config';
 
 @Injectable()
 export class AuthService {
@@ -98,7 +98,7 @@ export class AuthService {
       secret,
       { expiresIn: '10m' },
     );
-    return `${BASE_URL}${RESET_PASSWORD}${foundUser._id}/${token}`;
+    return `${HOSTED_URL}${RESET_PASSWORD}${foundUser._id}/${token}`;
   }
 
   async setNewPassword(id, password, token) {

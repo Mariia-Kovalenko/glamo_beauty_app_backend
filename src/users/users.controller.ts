@@ -21,10 +21,12 @@ import { Roles } from "src/decorators/roles.decorator";
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
     ApiBearerAuth,
+    ApiExcludeEndpoint,
     ApiForbiddenResponse,
     ApiInternalServerErrorResponse,
     ApiNotFoundResponse,
     ApiOkResponse,
+    ApiOperation,
     ApiTags,
     ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
@@ -43,18 +45,20 @@ import { FirebaseAdminService } from "src/firebase/firebase-admin.service";
 import * as multer from "multer";
 
 @ApiTags("users")
-@ApiBearerAuth(METADATA_AUTHORIZED_KEY)
 @Controller("users")
 export class UsersController {
     constructor(private userService: UsersService) {}
 
     @Get()
+    @ApiExcludeEndpoint()
     async getUsers() {
         return await this.userService.fetchUsers();
     }
 
     @Get("me")
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: "Get beauty master personal profile" })
+    @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
     @ApiOkResponse({
         description: "User found",
     })
@@ -74,6 +78,7 @@ export class UsersController {
         return userFound;
     }
 
+    @ApiExcludeEndpoint()
     @Get("masters")
     @Roles(Role.CUSTOMER)
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -93,6 +98,7 @@ export class UsersController {
     }
 
     @Get("masters/:id")
+    @ApiOperation({ summary: "Get beauty master by ID" })
     @UseGuards(JwtAuthGuard)
     @ApiOkResponse({
         description: "User found",
@@ -103,6 +109,7 @@ export class UsersController {
     }
 
     @Post("masters/near")
+    @ApiOperation({ summary: "Get beauty masters in radius based on location" })
     @ApiOkResponse({
         description: "Users found",
     })
@@ -120,16 +127,20 @@ export class UsersController {
     }
 
     @Patch("update")
+    @ApiOperation({ summary: "Update beauty master personal profile info" })
     @ApiForbiddenResponse({
         description: "Forbidden",
     })
+    @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
     @UseGuards(JwtAuthGuard, RolesGuard)
     async updateMaster(@Request() req, @Body() userData: UpdateUserDto) {
         return await this.userService.updateUser(req.user.userId, userData);
     }
 
     @Post("upload")
+    @ApiOperation({ summary: "Upload beauty master profile photo" })
     @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth(METADATA_AUTHORIZED_KEY)
     @UseInterceptors(
         FileInterceptor("file", {
             limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB size limit
@@ -209,6 +220,7 @@ export class UsersController {
     // }
 
     @Get("profile-image/:imageName")
+    @ApiOperation({ summary: "Get beauty master profile photo" })
     @ApiOkResponse({
         description: "Image found",
     })
@@ -226,12 +238,15 @@ export class UsersController {
         return res.sendFile(filePath);
     }
 
+
+    @ApiExcludeEndpoint()
     @Get('gallery/:id')
     async getUserGallery(@Param() user) {
         return await this.userService.getUserGallery(user.id);
     }
 
     @Post("upload-gallery")
+    @ApiExcludeEndpoint()
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(
         FileInterceptor(
@@ -256,7 +271,9 @@ export class UsersController {
         );
     }
 
+   
     @Delete("delete-gallery")
+    @ApiExcludeEndpoint()
     @UseGuards(JwtAuthGuard)
     async deleteFromGallery(@Request() req) {
         const img = req.body.image;
@@ -270,6 +287,7 @@ export class UsersController {
     }
 
     @Get("gallery-image/:imageName")
+    @ApiExcludeEndpoint()
     @ApiOkResponse({
         description: "Image found",
     })
